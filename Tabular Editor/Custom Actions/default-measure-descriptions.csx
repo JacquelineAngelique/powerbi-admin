@@ -1,7 +1,8 @@
 //Name: Default Measure Description
 //Tooltip: Adds expression to the description
 //Enable: Model
-//Tabular Editor version 2.16.0
+//Created by Jacqueline Kaltenborn
+//Tabular Editor version 2.16.6
 
 //It is better to format DAX before adding it into the descriptions
 foreach(var m in Model.AllMeasures)
