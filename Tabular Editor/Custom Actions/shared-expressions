@@ -1,4 +1,9 @@
-// Collect Share Expressions information:
+//Name: Shared Expressions
+//Tooltip: export share expressions information
+//Created by Jacqueline Kaltenborn
+//Tabular Editor version 2.16.6
+
+// Collect share expressions information:
 var objects = Model.Expressions;
  
 // Get properties:
