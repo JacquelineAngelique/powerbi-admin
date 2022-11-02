@@ -1,7 +1,8 @@
 //Name: Numeric Column to Do Not Summarize
 //Tooltip: Change all numeric columns to do not summarize
 //Enable: Model
-//Tabular Editor version 2.16.0
+//Created by Jacqueline Kaltenborn
+//Tabular Editor version 2.16.6
 
 foreach (var c in Model.AllColumns)
 {
