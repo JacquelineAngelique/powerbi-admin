@@ -1,7 +1,8 @@
 //Name: Countrows Measure
 //Tooltip: Create countrows measure for selected tables
 //Enable: Table
-//Tabular Editor version 2.16.0
+//Created by Jacqueline Kaltenborn
+//Tabular Editor version 2.16.6
 
 foreach(var table in Selected.Tables) {
     
