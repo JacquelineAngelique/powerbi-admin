@@ -1,7 +1,8 @@
 //Name: Format Numeric Columns
 //Tooltip: Format numberic columns that does not have a format already
 //Enable: Model
-//Tabular Editor version 2.16.0
+//Created by Jacqueline Kaltenborn
+//Tabular Editor version 2.16.6
 
 foreach (var c in Model.AllColumns)
 {
