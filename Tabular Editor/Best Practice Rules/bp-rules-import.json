@@ -1,0 +1,12 @@
+//Name: Best Practice Rules Import
+//Tooltip: Import BPRules.json by placing this in the Advanced Scripting window in Tabular Editor
+
+System.Net.WebClient w = new System.Net.WebClient(); 
+
+string path = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+string url = "https://raw.githubusercontent.com/microsoft/Analysis-Services/master/BestPracticeRules/BPARules.json";
+string downloadLoc = path+@"\TabularEditor\BPARules.json";
+w.DownloadFile(url, downloadLoc);
+
+//Close and reopen Tabular Editor
+//Save as a Custom Action to import the latest rules from GitHub
