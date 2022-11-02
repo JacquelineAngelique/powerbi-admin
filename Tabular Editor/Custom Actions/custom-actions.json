@@ -1,0 +1,130 @@
+{
+  "Actions": [
+    {
+      "Name": "CamelCase to Proper Case",
+      "Enabled": "true",
+      "Execute": "//Name: CamelCase to Proper Case\r\n//Tooltip: Create properly formatted names. If used with PBIX than it only works with measures\r\n//Enable: Table, Column, Measure, Hierarchy, Hierarchy Level, Perspective\r\n\r\nforeach(var obj in Selected.OfType<ITabularNamedObject>()) {\r\n    var oldName = obj.Name;\r\n    var newName = new System.Text.StringBuilder();\r\n    for(int i = 0; i < oldName.Length; i++) {\r\n        // First letter should always be capitalized:\r\n        if(i == 0) newName.Append(Char.ToUpper(oldName[i]));\r\n\r\n        // A sequence of two uppercase letters followed by a lowercase letter should have a space inserted\r\n        // after the first letter:\r\n        else if(i + 2 < oldName.Length && char.IsLower(oldName[i + 2]) && char.IsUpper(oldName[i + 1]) && char.IsUpper(oldName[i]))\r\n        {\r\n            newName.Append(oldName[i]);\r\n            newName.Append(\" \");\r\n        }\r\n\r\n        // All other sequences of a lowercase letter followed by an uppercase letter, should have a space\r\n        // inserted after the first letter:\r\n        else if(i + 1 < oldName.Length && char.IsLower(oldName[i]) && char.IsUpper(oldName[i+1]))\r\n        {\r\n            newName.Append(oldName[i]);\r\n            newName.Append(\" \");\r\n        }\r\n        else\r\n        {\r\n            newName.Append(oldName[i]);\r\n        }\r\n    }\r\n    obj.Name = newName.ToString();\r\n}",
+      "Tooltip": "Create properly formatted names. If used with PBIX than it only works with measures",
+      "ValidContexts": "Table, TableObject, Level, Perspective"
+    },
+    {
+      "Name": "Create %",
+      "Enabled": "Selected.Measures.Count == 2",
+      "Execute": "//Name: Create %\r\n//Tooltip: Creates a % calculation based on the selected measures. (Order of selection matters)\r\n//Enable: Measure\r\n\r\nvar m = Selected.Measures;\r\nif (m.Count() == 2)\r\n{\r\n    var first = m.First();\r\n    var last = m.Last();\r\n    var newMeasure = first.Table.AddMeasure(\r\n        \"% \" + first.Name,                                                                  // Name\r\n        \"DIVIDE(\" + first.DaxObjectFullName + \",\" + last.DaxObjectFullName + \")\",           // DAX expression\r\n        m.First().DisplayFolder                                                             // Display Folder   \r\n        );\r\n        // Set the format string on the new measure:\r\n    newMeasure.FormatString = \"0.00%;-0.00%;0.00%\";\r\n\r\n        // Provide some documentation:\r\n    newMeasure.Description = \"Expression: \" +newMeasure.Expression;\r\n};\r\nif (m.Count() != 2)\r\n{    \r\n    Output(\"Select 2 Measures to perform the action\");\r\n}",
+      "Tooltip": "Creates a % calculation based on the selected measures. (Order of selection matters)",
+      "ValidContexts": "Measure"
+    },
+    {
+      "Name": "Create AVG",
+      "Enabled": "true",
+      "Execute": "//Name: Create AVG\r\n//Tooltip: Creates a AVG measure for every currently selected column and hide the column.\r\n//Enable: Column\r\n \r\nforeach(var c in Selected.Columns)\r\n{\r\n    c.Table.AddMeasure(\r\n        \"Avg of \" + c.Name,                    // Name\r\n        \"AVERAGE(\" + c.DaxObjectFullName + \")\",    // DAX expression\r\n        c.DisplayFolder                        // Display Folder\r\n    );\r\n    c.IsHidden = true;\r\n}",
+      "Tooltip": "Creates a AVG measure for every currently selected column and hide the column.",
+      "ValidContexts": "Column"
+    },
+    {
+      "Name": "Create Base Column folders",
+      "Enabled": "true",
+      "Execute": "//Name: Create Base Column folders\r\n//Tooltip: Puts columns into an other columns folder. ID columns in an id folder and hides them.\r\n//Enable: Model\r\n \r\nforeach(var c in Model.AllColumns)\r\n{\r\n    c.DisplayFolder = \"Other Columns\";\r\n    \r\n    if(c.Name.ToLower().Contains(\"id\"))\r\n    {\r\n        c.DisplayFolder = \"IDs\";\r\n        c.IsHidden = true;\r\n    }\r\n   \r\n}",
+      "Tooltip": "Puts columns into an other columns folder. ID columns in an id folder and hides them.",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Create SUM",
+      "Enabled": "true",
+      "Execute": "//Name: Create SUM\r\n//Tooltip: Creates a SUM measure for every currently selected column and hide the column.\r\n//Enable: Column\r\n \r\nforeach(var c in Selected.Columns)\r\n{\r\n    c.Table.AddMeasure(\r\n        \"Sum of \" + c.Name,                    // Name\r\n        \"SUM(\" + c.DaxObjectFullName + \")\",    // DAX expression\r\n        c.DisplayFolder                        // Display Folder\r\n    );\r\n    c.IsHidden = true;\r\n}",
+      "Tooltip": "Creates a SUM measure for every currently selected column and hide the column.",
+      "ValidContexts": "Column"
+    },
+    {
+      "Name": "Default Measure Descriptions",
+      "Enabled": "true",
+      "Execute": "//Name: Default Measure Description\r\n//Tooltip: Adds expression to the description\r\n//Enable: Model\r\n//Created by Mihaly Kavasi (updated by Ed Hansberry's idea)\r\n//Tabular Editor version 2.16.0\r\n\r\n//It is better to format DAX before adding it into the descriptions\r\nforeach(var m in Model.AllMeasures)\r\n{\r\n    if(m.Description == \"\")\r\n    {    \r\n        m.Description =  \"Expression:\" + \"\\n\" + m.Expression;\r\n    }\r\n    else if (!m.Description.Contains(\"Expression\"))\r\n    {\r\n        m.Description = m.Description + \"\\n\" + \"Expression:\" + \"\\n\" + m.Expression;\r\n    }\r\n    else\r\n    {\r\n        // '2021-07-05 / B.Agullo / reset expressions already added\r\n        int pos = m.Description.IndexOf(\"Expression\",0); \r\n        bool onlyExpression = (pos == 0);\r\n        \r\n        if (onlyExpression) {\r\n            m.Description = \"Expression:\" + \"\\n\" + m.Expression;\r\n        } else {\r\n            m.Description = m.Description.Substring(0,pos-1)  + \"\\n\" + \"Expression:\" + \"\\n\" + m.Expression;\r\n        }\r\n    }\r\n}",
+      "Tooltip": "Adds expression to the description",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Documentation Script",
+      "Enabled": "true",
+      "Execute": "// Collect all measures, columns, hierarchies and tables (ignore automatically generated entities):\r\nvar objects = Model.AllMeasures.Cast<ITabularNamedObject>()\r\n      .Concat(Model.AllColumns.Where(c => !c.Table.Name.Contains(\"Template\") \r\n                                       && !c.Table.Name.Contains(\"LocalDate\"))\r\n              )\r\n      .Concat(Model.AllHierarchies.Where(h => !h.Table.Name.Contains(\"Template\") \r\n                                       && !h.Table.Name.Contains(\"LocalDate\"))\r\n              )\r\n      .Concat(Model.AllLevels.Where(l => !l.Table.Name.Contains(\"Template\") \r\n                                       && !l.Table.Name.Contains(\"LocalDate\"))\r\n              )\r\n      .Concat(Model.Tables);\r\n \r\n// Get their properties\r\nvar tsv = ExportProperties(objects,\"Name,ObjectType,Parent,Description,FormatString,DataType,Expression,IsHidden,DisplayFolder,SortByColumn,SummarizeBy,Synonyms,DataCategory,SourceColumn,IsAvailableInMDX,IsUnique\");\r\n\r\n// Output to screen (can then be copy-pasted into Excel):\r\n tsv.Output();",
+      "Tooltip": "Documentation Script",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Documentation Script with VPAX",
+      "Enabled": "true",
+      "Execute": "// Collect all measures, columns, hierarchies and tables (ignore automatically generated entities):\r\nvar objects = Model.AllMeasures.Cast<ITabularNamedObject>()\r\n      .Concat(Model.AllColumns.Where(c => !c.Table.Name.Contains(\"Template\") \r\n                                       && !c.Table.Name.Contains(\"LocalDate\"))\r\n              )\r\n      .Concat(Model.AllHierarchies.Where(h => !h.Table.Name.Contains(\"Template\") \r\n                                       && !h.Table.Name.Contains(\"LocalDate\"))\r\n              )\r\n      .Concat(Model.AllLevels.Where(l => !l.Table.Name.Contains(\"Template\") \r\n                                       && !l.Table.Name.Contains(\"LocalDate\"))\r\n              )\r\n      .Concat(Model.Tables);\r\n \r\n// Get their properties\r\nvar tsv = ExportProperties(objects,\"Name,ObjectType,Parent,Description,FormatString,DataType,Expression,IsHidden,DisplayFolder,SortByColumn,SummarizeBy,Synonyms,DataCategory,SourceColumn,IsAvailableInMDX,IsUnique,Annotations\");\r\n\r\n// Output to screen (can then be copy-pasted into Excel):\r\n tsv.Output();",
+      "Tooltip": "Documentation Script with VPAX",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Format Measures",
+      "Enabled": "true",
+      "Execute": "//Name: Format Measures\r\n//Tooltip: Format all measures using the DAX Formatter API\r\n//Enable: Model\r\n//Created by Mihaly Kavasi\r\n//Tabular Editor version 2.16.0\r\n\r\nModel.AllMeasures.FormatDax();",
+      "Tooltip": "Format all measures using the DAX Formatter API",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Hide Numeric Columns",
+      "Enabled": "true",
+      "Execute": "//Name: Hide numeric Columns\r\n//Tooltip: Hide all numeric columns from selected tables\r\n//Enable: Table\r\n//Created by Mihaly Kavasi\r\n//Tabular Editor version 2.16.0\r\n\r\n//This could be used to hide all the numeric columns from fact tables to encourage to use of explicit measures instead.\r\nforeach(var t in Selected.Tables)\r\n{\r\n    foreach(var c in t.Columns)\r\n    {\r\n        if(c.DataType == DataType.Decimal || c.DataType == DataType.Double || c.DataType == DataType.Int64)\r\n        {    \r\n        c.IsHidden = true;\r\n        }\r\n    }\r\n}",
+      "Tooltip": "Hide Numeric Columns",
+      "ValidContexts": "Table"
+    },
+    {
+      "Name": "Hide Relationship Columns",
+      "Enabled": "true",
+      "Execute": "//Name: Hide all relationship columns\r\n//Tooltip: Hide all columns on many side of a join\r\n//Enable: Model\r\n//Created by Mihaly Kavasi (originally from Matt Allington, https://exceleratorbi.com.au)\r\n//Tabular Editor version 2.16.0\r\n\r\nforeach (var r in Model.Relationships)\r\n{\r\n    var c = r.FromColumn.Name;\r\n    var t = r.FromTable.Name;\r\n    Model.Tables[t].Columns[c].IsHidden = true;\r\n}",
+      "Tooltip": "Hide Relationship Columns",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Organize ID Columns",
+      "Enabled": "true",
+      "Execute": "//Name: Organize ID Columns\r\n//Tooltip: Puts ID columns in an id folder and hides them.\r\n//Enable: Model\r\n//Created by Mihaly Kavasi\r\n//Tabular Editor version 2.16.0\r\n\r\nforeach(var c in Model.AllColumns)\r\n{\r\n    if(c.Name.ToLower().Contains(\"id\"))\r\n    {\r\n        c.DisplayFolder = \"_IDs\";\r\n        c.IsHidden = true;\r\n    }\r\n   \r\n}",
+      "Tooltip": "Organize ID Columns",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Relationship Script",
+      "Enabled": "true",
+      "Execute": "// Collect Relationship information:\r\nvar objects = Model.Relationships;\r\n \r\n// Get their properties:\r\nvar tsv = ExportProperties(objects,\"Name\");\r\n \r\n// Output to screen (can then be copy-pasted into Excel):\r\n tsv.Output();",
+      "Tooltip": "Relationship Script",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Relationship Script with VPAX",
+      "Enabled": "true",
+      "Execute": "// Collect Relationship information:\r\nvar objects = Model.Relationships;\r\n \r\n// Get their properties:\r\nvar tsv = ExportProperties(objects,\"Name,Annotations\");\r\n \r\n// Output to screen (can then be copy-pasted into Excel):\r\n tsv.Output();",
+      "Tooltip": "Relationship Script with VPAX",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "Set Available in MDX (on/off)",
+      "Enabled": "true",
+      "Execute": "//Name: Set Available in MDX (on/off)\r\n//Tooltip: Turn Available in MDX attribute on or off\r\n//Enable: Model\r\n//Created by Mihaly Kavasi\r\n//Tabular Editor version 2.16.5\r\nforeach (var c in Selected.Columns)\r\n    if(c.IsAvailableInMDX == true)\r\n        c.IsAvailableInMDX = false;\r\n    else c.IsAvailableInMDX = true;",
+      "Tooltip": " Turn Available in MDX attribute on or off",
+      "ValidContexts": "Column"
+    },
+    {
+      "Name": "Set Sort By",
+      "Enabled": "true",
+      "Execute": "//Name: Set sort by\r\n//Tooltip: Select 2 columns to set sort the first by the last\r\n//Enable: Column\r\n\r\nvar c = Selected.Columns;\r\nif (c.Count() == 2)\r\n{\r\n    var first = c.First();\r\n    var last = c.Last();\r\n    first.SortByColumn = last;\r\n    \r\n};\r\nif (c.Count() != 2)\r\n{    \r\n    Output(\"Select 2 Column to perform the action\");\r\n}",
+      "Tooltip": "Select 2 columns to set sort the first by the last",
+      "ValidContexts": "Column"
+    },
+    {
+      "Name": "Time intelligence",
+      "Enabled": "true",
+      "Execute": "//Name: Time intelligence\r\n//Tooltip: Creates time intelligence measures for every selected measure. (YTD, PY, YoY, YoY%, QTD, MTD)\r\n//Enable: Measure\r\n\r\nvar dateColumn = \"'Calendar'[Dates]\";\r\nvar displayFolder = \"Time Intelligence\";\r\n\r\nforeach(var m in Selected.Measures) {\r\n    // Year-to-date:\r\n    m.Table.AddMeasure(\r\n        m.Name + \" YTD\",                                       // Name\r\n        \"TOTALYTD(\" + m.DaxObjectName + \", \" + dateColumn + \")\",     // DAX expression\r\n        displayFolder                                      // Display Folder\r\n    );\r\n    \r\n    // Previous year:\r\n    m.Table.AddMeasure(\r\n        m.Name + \" PY\",                                       // Name\r\n        \"CALCULATE(\" + m.DaxObjectName + \", SAMEPERIODLASTYEAR(\" + dateColumn + \"))\",     // DAX expression\r\n        displayFolder                                         // Display Folder\r\n    );    \r\n    \r\n    // Year-over-year\r\n    m.Table.AddMeasure(\r\n        m.Name + \" YoY\",                                       // Name\r\n        m.DaxObjectName + \" - [\" + m.Name + \" PY]\",            // DAX expression\r\n        displayFolder                                         // Display Folder\r\n    );\r\n    \r\n    // Year-over-year %:\r\n    m.Table.AddMeasure(\r\n        m.Name + \" YoY%\",                                           // Name\r\n        \"DIVIDE(\" + m.DaxObjectName + \", [\" + m.Name + \" YoY])\",    // DAX expression\r\n        displayFolder                                              // Display Folder\r\n    ).FormatString = \"0.0 %\";  // Set format string as percentage\r\n    \r\n    // Quarter-to-date:\r\n    m.Table.AddMeasure(\r\n        m.Name + \" QTD\",                                            // Name\r\n        \"TOTALQTD(\" + m.DaxObjectName + \", \" + dateColumn + \")\",    // DAX expression\r\n        displayFolder                                             // Display Folder\r\n    );\r\n    \r\n    // Month-to-date:\r\n    m.Table.AddMeasure(\r\n        m.Name + \" MTD\",                                       // Name\r\n        \"TOTALMTD(\" + m.DaxObjectName + \", \" + dateColumn + \")\",     // DAX expression\r\n        displayFolder                                         // Display Folder\r\n    );\r\n}",
+      "Tooltip": "Creates time intelligence measures for every selected measure. (YTD, PY, YoY, YoY%, QTD, MTD)",
+      "ValidContexts": "Measure"
+    },
+    {
+      "Name": "Shared Expressions Script",
+      "Enabled": "true",
+      "Execute": "// Collect Share Expressions information:\r\nvar objects = Model.Expressions;\r\n \r\n// Get their properties:\r\nvar tsv = ExportProperties(objects,\"Name, Expression, Annotations\");\r\n \r\n// Output to screen (can then be copy-pasted into Excel):\r\n tsv.Output();",
+      "Tooltip": "Shared Expressions Script",
+      "ValidContexts": "Model"
+    }
+  ]
+}
