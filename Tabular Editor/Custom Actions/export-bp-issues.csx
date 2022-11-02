@@ -1,7 +1,7 @@
 //Name: Export Best Practice Issues
 //Tooltip: run this file to export the BP violations in your pbix file for documentation purposes
 //Created by Jacqueline Kaltenborn
-//Tabular Editor version 2.16.0
+//Tabular Editor version 2.16.6
 
 using TabularEditor.BestPracticeAnalyzer; 
 
