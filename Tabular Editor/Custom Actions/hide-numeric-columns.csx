@@ -1,7 +1,8 @@
 //Name: Hide Numeric Columns
 //Tooltip: Hide all numeric columns from selected tables
 //Enable: Table
-//Tabular Editor version 2.16.0
+//Created by Jacqueline Kaltenborn
+//Tabular Editor version 2.16.6
 
 //This could be used to hide all the numeric columns from fact tables to encourage to use of explicit measures instead.
 foreach(var t in Selected.Tables)
