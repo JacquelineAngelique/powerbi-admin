@@ -1,4 +1,8 @@
-// Split Date/Time recommendation
+// Name: Split Date/Time recommendation
+// Tooltip: in order to split datetime, you must first run this script in advanced scripting window
+// Created by Jacqueline Kaltenborn
+
+
 string annName = "DateTimeWithHourMinSec";
 foreach (var c in Model.AllColumns.Where(a => a.DataType == DataType.DateTime))
 {
